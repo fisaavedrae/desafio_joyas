@@ -1,16 +1,22 @@
 const { readJoyas, readJoyasFiltros } = require("../database/consultas");
+const { prepararHATEOAS } = require("../utils/index")
 
 const readGetController = async (req, res, next) => {
     const { data } = req;
-    const { dataValid } = data;
+    const { limits, page, order_by, dataValid } = data;
     try {
         if (dataValid) {
-            const post_query = await readJoyas();
+            const post_query = await readJoyas(limits, page, order_by);
 
             if (post_query != "") {
+                const HATEOAS = await prepararHATEOAS(post_query)
+                //console.log(HATEOAS)
+                res.json(HATEOAS);
+            }
+            else {
                 res.status(200).json({
-                    totaljoyas: 'Success',
-                    message: 'Joyas leidas',
+                    status: 'Success',
+                    message: 'No existe información de Joyas que cumplan los criterios de búsqueda',
                     posts: post_query,
                 });
             }
@@ -23,16 +29,19 @@ const readGetController = async (req, res, next) => {
 
 const readGetFiltrosController = async (req, res, next) => {
     const { data } = req;
-    const { dataValid } = data;
+    const { precio_max, precio_min, categoria, metal, dataValid } = data;
+    //console.log(precio_max, precio_min, categoria, metal, dataValid)
     try {
         if (dataValid) {
-            const post_query = await readJoyasFiltros();
+            const post_query = await readJoyasFiltros(precio_max, precio_min, categoria, metal);
 
             if (post_query != "") {
-
+                res.status(200).json(post_query);
+            }
+            else {
                 res.status(200).json({
                     status: 'Success',
-                    message: 'Joyas leidas',
+                    message: 'No existe información de Joyas que cumplan los criterios de búsqueda',
                     posts: post_query,
                 });
             }
@@ -42,6 +51,8 @@ const readGetFiltrosController = async (req, res, next) => {
         next(error);
     }
 };
+
+
 
 module.exports = {
     readGetController, readGetFiltrosController
